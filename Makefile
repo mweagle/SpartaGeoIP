@@ -46,5 +46,8 @@ tags:
 provision:
 	go run main.go --level debug provision --s3Bucket $(S3_BUCKET)
 
+delete:
+	go run main.go --level debug delete
+
 describe:
 	go run main.go --level info describe --out ./graph.html
