@@ -13,6 +13,17 @@ import (
 	"github.com/oschwald/geoip2-golang"
 )
 
+var dbHandle *geoip2.Reader
+
+// One time load of the database
+func init() {
+	openHandle, err := geoip2.FromBytes(constants.FSMustByte(false, "/GeoLite2-Country.mmdb"))
+	if err != nil {
+		panic(err.Error())
+	}
+	dbHandle = openHandle
+}
+
 //go:generate mkdir -pv ./constants
 //go:generate rm ./constants/CONSTANTS.go
 //go:generate esc -o ./constants/CONSTANTS.go -pkg constants GeoLite2-Country.mmdb
@@ -27,17 +38,8 @@ func ipGeoLambda(event *json.RawMessage, context *sparta.LambdaContext, w http.R
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	db, err := geoip2.FromBytes(constants.FSMustByte(false, "/GeoLite2-Country.mmdb"))
-	if err != nil {
-		logger.Error("Failed to open Database: ", err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer db.Close()
-
 	parsedIP := net.ParseIP(lambdaEvent.Context.Identity.SourceIP)
-	record, err := db.City(parsedIP)
+	record, err := dbHandle.City(parsedIP)
 	if err != nil {
 		logger.Error("Failed to find city: ", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
