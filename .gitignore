@@ -2,6 +2,7 @@
 *.o
 *.a
 *.so
+SpartaGeoIP
 
 # Folders
 _obj
