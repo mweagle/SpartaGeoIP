@@ -1,7 +1,7 @@
 # SpartaGeoIP
 Simple [Sparta](http://gosparta.io) based Request IP -> Geo mapping example
 
-Inspired by https://github.com/tmaiaroto/go-lambda-geoip
+Original version: https://github.com/tmaiaroto/go-lambda-geoip
 
 Instructions:
 
