@@ -14,8 +14,8 @@ import (
 )
 
 //go:generate mkdir -pv ./constants
+//go:generate rm ./constants/CONSTANTS.go
 //go:generate esc -o ./constants/CONSTANTS.go -pkg constants GeoLite2-Country.mmdb
-
 ////////////////////////////////////////////////////////////////////////////////
 // IP->Geo results
 //
@@ -36,18 +36,17 @@ func ipGeoLambda(event *json.RawMessage, context *sparta.LambdaContext, w http.R
 	}
 	defer db.Close()
 
-	parsedIp := net.ParseIP(lambdaEvent.Context.Identity.SourceIP)
-	record, err := db.City(parsedIp)
+	parsedIP := net.ParseIP(lambdaEvent.Context.Identity.SourceIP)
+	record, err := db.City(parsedIP)
 	if err != nil {
 		logger.Error("Failed to find city: ", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
+	// Return the Info
 	httpResponse := map[string]interface{}{
-		"Info": record,
+		"info": record,
 	}
-
 	responseBody, err := json.Marshal(httpResponse)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -57,6 +56,8 @@ func ipGeoLambda(event *json.RawMessage, context *sparta.LambdaContext, w http.R
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Main
 func main() {
 	stage := sparta.NewStage("ipgeo")
 	apiGateway := sparta.NewAPIGateway("SpartaGeoIPService", stage)
@@ -64,7 +65,7 @@ func main() {
 
 	var lambdaFunctions []*sparta.LambdaAWSInfo
 	lambdaFn := sparta.NewLambda(sparta.IAMRoleDefinition{}, ipGeoLambda, nil)
-	apiGatewayResource, _ := apiGateway.NewResource("/ipgeo", lambdaFn)
+	apiGatewayResource, _ := apiGateway.NewResource("/info", lambdaFn)
 	apiGatewayResource.NewMethod("GET")
 	lambdaFunctions = append(lambdaFunctions, lambdaFn)
 
