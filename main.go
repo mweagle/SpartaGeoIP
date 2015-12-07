@@ -25,7 +25,7 @@ func init() {
 }
 
 //go:generate mkdir -pv ./constants
-//go:generate rm ./constants/CONSTANTS.go
+//go:generate rm -f ./constants/CONSTANTS.go
 //go:generate esc -o ./constants/CONSTANTS.go -pkg constants GeoLite2-Country.mmdb
 ////////////////////////////////////////////////////////////////////////////////
 // IP->Geo results
