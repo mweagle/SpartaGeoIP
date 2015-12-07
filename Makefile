@@ -44,10 +44,10 @@ tags:
 	gotags -tag-relative=true -R=true -sort=true -f="tags" -fields=+l .
 
 provision:
-	go run main.go --level debug provision --s3Bucket $(S3_BUCKET)
+	go run main.go --level info provision --s3Bucket $(S3_BUCKET)
 
 delete:
-	go run main.go --level debug delete
+	go run main.go --level info delete
 
 describe:
 	go run main.go --level info describe --out ./graph.html
