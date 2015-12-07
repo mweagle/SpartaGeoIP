@@ -27,8 +27,8 @@ get: clean ensure_vendor
 	rm -rf ./src/main/vendor/github.com/Sirupsen/logrus/.git
 	git clone --depth=1 https://github.com/voxelbrain/goptions ./vendor/github.com/voxelbrain/goptions
 	rm -rf ./src/main/vendor/github.com/voxelbrain/goptions/.git
-	git clone --depth=1 https://github.com/mjibson/esc ./vendor/github.com/mjibson/esc
-	rm -rf ./src/main/vendor/github.com/mjibson/esc/.git
+	git clone --depth=1 https://github.com/mweagle/esc ./vendor/github.com/mweagle/esc
+	rm -rf ./src/main/vendor/github.com/mweagle/esc/.git
 	git clone --depth=1 https://github.com/mweagle/Sparta ./vendor/github.com/mweagle/Sparta
 	rm -rf ./src/main/vendor/github.com/mweagle/Sparta/.git
 	git clone --depth=1 https://github.com/oschwald/geoip2-golang ./vendor/github.com/oschwald/geoip2-golang
