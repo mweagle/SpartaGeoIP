@@ -10,7 +10,6 @@ clean:
 
 format:
 	go fmt .
-	gofmt -s -w ./transforms/
 
 vet:
 	go vet .
