@@ -74,5 +74,6 @@ func main() {
 	sparta.Main(stackName,
 		"Sparta app supporting ip->geo mapping",
 		lambdaFunctions,
-		apiGateway)
+		apiGateway,
+		nil)
 }
