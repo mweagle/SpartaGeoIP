@@ -32,6 +32,8 @@ get: clean ensure_vendor
 	rm -rf ./src/main/vendor/github.com/mweagle/Sparta/.git
 	git clone --depth=1 https://github.com/oschwald/geoip2-golang ./vendor/github.com/oschwald/geoip2-golang
 	rm -rf ./src/main/vendor/github.com/oschwald/geoip2-golang/.git
+	git clone --depth=1 https://github.com/crewjam/go-cloudformation ./vendor/github.com/crewjam/go-cloudformation
+	rm -rf ./src/main/vendor/github.com/crewjam/go-cloudformation/.git
 
 build: get format vet generate
 	GO15VENDOREXPERIMENT=1 go build .
