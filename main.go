@@ -6,7 +6,7 @@ import (
 	"net"
 	"net/http"
 
-	"SpartaGeoIP/constants"
+	"github.com/mweagle/SpartaGeoIP/constants"
 
 	"github.com/Sirupsen/logrus"
 	sparta "github.com/mweagle/Sparta"
