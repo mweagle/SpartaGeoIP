@@ -68,7 +68,7 @@ func main() {
 	var lambdaFunctions []*sparta.LambdaAWSInfo
 	lambdaFn := sparta.NewLambda(sparta.IAMRoleDefinition{}, ipGeoLambda, nil)
 	apiGatewayResource, _ := apiGateway.NewResource("/info", lambdaFn)
-	apiGatewayResource.NewMethod("GET")
+	apiGatewayResource.NewMethod("GET", http.StatusOK)
 	lambdaFunctions = append(lambdaFunctions, lambdaFn)
 
 	sparta.Main(stackName,
