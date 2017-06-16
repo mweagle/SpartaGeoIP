@@ -6,10 +6,10 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/mweagle/SpartaGeoIP/constants"
-
 	"github.com/Sirupsen/logrus"
 	sparta "github.com/mweagle/Sparta"
+	spartaCF "github.com/mweagle/Sparta/aws/cloudformation"
+	"github.com/mweagle/SpartaGeoIP/constants"
 	"github.com/oschwald/geoip2-golang"
 )
 
@@ -63,13 +63,13 @@ func ipGeoLambda(event *json.RawMessage, context *sparta.LambdaContext, w http.R
 func main() {
 	stage := sparta.NewStage("ipgeo")
 	apiGateway := sparta.NewAPIGateway("SpartaGeoIPService", stage)
-	stackName := "SpartaGeoIP"
 
 	var lambdaFunctions []*sparta.LambdaAWSInfo
 	lambdaFn := sparta.NewLambda(sparta.IAMRoleDefinition{}, ipGeoLambda, nil)
 	apiGatewayResource, _ := apiGateway.NewResource("/info", lambdaFn)
 	apiGatewayResource.NewMethod("GET", http.StatusOK)
 	lambdaFunctions = append(lambdaFunctions, lambdaFn)
+	stackName := spartaCF.UserScopedStackName("SpartaGeoIP")
 
 	sparta.Main(stackName,
 		"Sparta app supporting ip->geo mapping",
