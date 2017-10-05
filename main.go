@@ -30,9 +30,15 @@ func init() {
 ////////////////////////////////////////////////////////////////////////////////
 // IP->Geo results
 //
-func ipGeoLambda(event *json.RawMessage, context *sparta.LambdaContext, w http.ResponseWriter, logger *logrus.Logger) {
+
+func ipGeoLambda(w http.ResponseWriter, r *http.Request) {
+	logger, _ := r.Context().Value(sparta.ContextKeyLogger).(*logrus.Logger)
+	lambdaContext, _ := r.Context().Value(sparta.ContextKeyLambdaContext).(*sparta.LambdaContext) {
+
+	decoder := json.NewDecoder(r.Body)
+	defer r.Body.Close()
 	var lambdaEvent sparta.APIGatewayLambdaJSONEvent
-	err := json.Unmarshal([]byte(*event), &lambdaEvent)
+	err := decoder.Decode(&lambdaEvent)
 	if err != nil {
 		logger.Error("Failed to unmarshal event data: ", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -54,7 +60,7 @@ func ipGeoLambda(event *json.RawMessage, context *sparta.LambdaContext, w http.R
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprint(w, string(responseBody))
+		w.Write(responseBody)
 	}
 }
 
@@ -65,7 +71,9 @@ func main() {
 	apiGateway := sparta.NewAPIGateway("SpartaGeoIPService", stage)
 
 	var lambdaFunctions []*sparta.LambdaAWSInfo
-	lambdaFn := sparta.NewLambda(sparta.IAMRoleDefinition{}, ipGeoLambda, nil)
+	lambdaFn := sparta.HandleAWSLambda(sparta.LambdaName(ipGeoLambda),
+		http.HandlerFunc(ipGeoLambda),
+		sparta.IAMRoleDefinition{})
 	apiGatewayResource, _ := apiGateway.NewResource("/info", lambdaFn)
 	apiGatewayResource.NewMethod("GET", http.StatusOK)
 	lambdaFunctions = append(lambdaFunctions, lambdaFn)
