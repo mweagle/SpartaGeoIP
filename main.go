@@ -1,14 +1,13 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
+	"context"
 	"net"
 	"net/http"
 
-	"github.com/Sirupsen/logrus"
 	sparta "github.com/mweagle/Sparta"
 	spartaCF "github.com/mweagle/Sparta/aws/cloudformation"
+	"github.com/mweagle/Sparta/aws/events"
 	"github.com/mweagle/SpartaGeoIP/constants"
 	"github.com/oschwald/geoip2-golang"
 )
@@ -31,37 +30,17 @@ func init() {
 // IP->Geo results
 //
 
-func ipGeoLambda(w http.ResponseWriter, r *http.Request) {
-	logger, _ := r.Context().Value(sparta.ContextKeyLogger).(*logrus.Logger)
-	lambdaContext, _ := r.Context().Value(sparta.ContextKeyLambdaContext).(*sparta.LambdaContext) {
-
-	decoder := json.NewDecoder(r.Body)
-	defer r.Body.Close()
-	var lambdaEvent sparta.APIGatewayLambdaJSONEvent
-	err := decoder.Decode(&lambdaEvent)
-	if err != nil {
-		logger.Error("Failed to unmarshal event data: ", err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	parsedIP := net.ParseIP(lambdaEvent.Context.Identity.SourceIP)
+func ipGeoLambda(ctx context.Context, apiRequest events.APIGatewayRequest) (map[string]interface{}, error) {
+	parsedIP := net.ParseIP(apiRequest.Context.Identity.SourceIP)
 	record, err := dbHandle.City(parsedIP)
 	if err != nil {
-		logger.Error("Failed to find city: ", err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return nil, err
 	}
-	// Return the Info
-	httpResponse := map[string]interface{}{
-		"info": record,
+	requestResponse := map[string]interface{}{
+		"ip":     parsedIP,
+		"record": record,
 	}
-	responseBody, err := json.Marshal(httpResponse)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	} else {
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(responseBody)
-	}
+	return requestResponse, nil
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -72,10 +51,12 @@ func main() {
 
 	var lambdaFunctions []*sparta.LambdaAWSInfo
 	lambdaFn := sparta.HandleAWSLambda(sparta.LambdaName(ipGeoLambda),
-		http.HandlerFunc(ipGeoLambda),
+		ipGeoLambda,
 		sparta.IAMRoleDefinition{})
 	apiGatewayResource, _ := apiGateway.NewResource("/info", lambdaFn)
-	apiGatewayResource.NewMethod("GET", http.StatusOK)
+	apiMethod, _ := apiGatewayResource.NewMethod("GET", http.StatusOK, http.StatusOK)
+	apiMethod.SupportedRequestContentTypes = []string{"application/json"}
+
 	lambdaFunctions = append(lambdaFunctions, lambdaFn)
 	stackName := spartaCF.UserScopedStackName("SpartaGeoIP")
 
