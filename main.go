@@ -6,8 +6,9 @@ import (
 	"net/http"
 
 	sparta "github.com/mweagle/Sparta"
+	spartaAPIGateway "github.com/mweagle/Sparta/aws/apigateway"
 	spartaCF "github.com/mweagle/Sparta/aws/cloudformation"
-	"github.com/mweagle/Sparta/aws/events"
+	spartaAWSEvents "github.com/mweagle/Sparta/aws/events"
 	"github.com/mweagle/SpartaGeoIP/constants"
 	"github.com/oschwald/geoip2-golang"
 )
@@ -30,7 +31,8 @@ func init() {
 // IP->Geo results
 //
 
-func ipGeoLambda(ctx context.Context, apiRequest events.APIGatewayRequest) (map[string]interface{}, error) {
+func ipGeoLambda(ctx context.Context,
+	apiRequest spartaAWSEvents.APIGatewayRequest) (*spartaAPIGateway.Response, error) {
 	parsedIP := net.ParseIP(apiRequest.Context.Identity.SourceIP)
 	record, err := dbHandle.City(parsedIP)
 	if err != nil {
@@ -40,7 +42,7 @@ func ipGeoLambda(ctx context.Context, apiRequest events.APIGatewayRequest) (map[
 		"ip":     parsedIP,
 		"record": record,
 	}
-	return requestResponse, nil
+	return spartaAPIGateway.NewResponse(http.StatusOK, requestResponse), nil
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -50,7 +52,7 @@ func main() {
 	apiGateway := sparta.NewAPIGateway("SpartaGeoIPService", stage)
 
 	var lambdaFunctions []*sparta.LambdaAWSInfo
-	lambdaFn := sparta.HandleAWSLambda(sparta.LambdaName(ipGeoLambda),
+	lambdaFn, _ := sparta.NewAWSLambda(sparta.LambdaName(ipGeoLambda),
 		ipGeoLambda,
 		sparta.IAMRoleDefinition{})
 	apiGatewayResource, _ := apiGateway.NewResource("/info", lambdaFn)
